@@ -23,6 +23,8 @@ class OllamaProvider(Provider):
             "OLLAMA_API_URL", "http://localhost:11434"
         )
 
+        self.api_key = config.get("api_key") or os.getenv("OLLAMA_API_KEY")
+
         # Optionally set a custom timeout (default to 30s)
         self.timeout = config.get("timeout", 30)
 
@@ -37,10 +39,16 @@ class OllamaProvider(Provider):
             **kwargs,  # Pass any additional arguments to the API
         }
 
+        # Prepare headers
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+
         try:
             response = httpx.post(
                 self.url.rstrip("/") + self._CHAT_COMPLETION_ENDPOINT,
                 json=data,
+                headers=headers,
                 timeout=self.timeout,
             )
             response.raise_for_status()
